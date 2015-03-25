@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# vim: softtabstop=4 shiftwidth=4 expandtab fenc=utf-8 spell spelllang=en cc=120
+
+set -e
+
+SCRIPT_NAME="$(basename $0)"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+show_help() {
+    cat >&2 <<EOF
+Usage: uhuf [-d] [-l] [-e] [filepath]
+
+    -d    download the file
+    -l    list directory contents
+    -e    execute the file
+    -h    show this help and exit
+
+EOF
+}
+
+echoerror() {
+    printf "$SCRIPT_NAME: %s\n" "$@" 1>&2;
+}
+
+while getopts ":dehl" opt; do
+    case $opt in
+    d)
+        ACTION=DOWNLOAD
+        ;;
+    e)
+        ACTION=EXECUTE
+        ;;
+    h)
+        show_help
+        exit
+        ;;
+    l)
+        ACTION=LIST
+        ;;
+    \?)
+        echo "Invalid option: -$OPTARG" >&2
+        show_help
+        exit 1
+        ;;
+    esac
+done
+shift "$((OPTIND-1))"
+
+# Check config file
+if [ -f /etc/uhuf.conf ]; then
+    CONFIG_FILE=/etc/uhuf.conf
+elif [ -f "$SCRIPT_DIR/../etc/uhuf.conf" ]; then
+    CONFIG_FILE="$SCRIPT_DIR/../etc/uhuf.conf"
+else
+    echoerror 'uhuf config file is not found.' 
+    exit 1
+fi
+
+# Parse config file
+source read_ini.sh
+set +o errexit
+read_ini "$CONFIG_FILE"
+set -o errexit
+
+# Assign config variables
+GITLAB_URL="$INI__uhuf__gitlab_url"
+PROJECT_ID="$INI__uhuf__project_id"
+PRIVATE_TOKEN="$INI__uhuf__private_token"
+
+TREE_URL="$GITLAB_URL/api/v3/projects/$PROJECT_ID/repository/tree/?path="
+RAW_URL="$GITLAB_URL/api/v3/projects/$PROJECT_ID/repository/blobs/master/?filepath="
+
+TMP_DIR=/tmp/uhuf
+mkdir -p "$TMP_DIR"
+
+curl_tree() {
+    if [ -n "$1" ]; then
+        local path="${1%%/*}/"
+    fi
+    curl -s -H "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$TREE_URL${1}" | \
+        JSON.sh -l | egrep '\[[0-9]+,"name"\]|\[[0-9]+,"type"\]' | \
+        gawk '{ print $2 }' | tr -d '"' | xargs -L 2 | \
+        gawk -v path=$path \
+        '$2 == "tree" { print path$1"/" } $2 == "blob" { print path$1 }'
+}
+
+curl_raw() {
+    curl -s -H "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$RAW_URL${1}"
+}
+
+download_filepath() {
+    local filepath="$1"
+    local filename="${1##*/}"
+    local temppath="$TMP_DIR/$filename"
+    curl_raw "$filepath" > "$temppath"
+    # Check if file is valid
+    head -1 "$temppath" | grep '{"message"' > /dev/null && {
+        echoerror 'File is not downloaded because of invalid API access.'
+        exit 1
+    } || {
+        mv "$temppath" "$filename"
+    }
+}
+
+execute_filepath() {
+    local filepath="$1"
+    local filename="${1##*/}"
+    local temppath="$TMP_DIR/$filename"
+    curl_raw "$filepath" > "$temppath"
+    # Check if file is valid
+    head -1 "$temppath" | grep '{"message"' > /dev/null && {
+        echoerror 'File is not executed because of invalid API access.'
+        exit 1
+    } || {
+        chmod +x "$temppath"
+        $temppath
+        rm "$temppath"
+    }  
+}
+
+case _${ACTION} in
+    _)
+        curl_raw "$1"
+        ;;
+    _LIST)
+        curl_tree "$1"
+        ;;
+    _DOWNLOAD)
+        download_filepath "$1"
+        ;;
+    _EXECUTE)
+        execute_filepath "$1"
+        ;;
+esac
