@@ -52,7 +52,7 @@ if [ -f /etc/uhuf.conf ]; then
 elif [ -f "$SCRIPT_DIR/../etc/uhuf.conf" ]; then
     CONFIG_FILE="$SCRIPT_DIR/../etc/uhuf.conf"
 else
-    echoerror 'uhuf config file is not found.' 
+    echoerror 'config file is not found.'
     exit 1
 fi
 
@@ -97,7 +97,7 @@ download_filepath() {
     curl_raw "$filepath" > "$temppath"
     # Check if file is valid
     head -1 "$temppath" | grep '{"message"' > /dev/null && {
-        echoerror 'File is not downloaded because of invalid API access.'
+        echoerror 'file is not downloaded because of invalid API access.'
         exit 1
     } || {
         mv "$temppath" "$filename"
@@ -111,7 +111,7 @@ execute_filepath() {
     curl_raw "$filepath" > "$temppath"
     # Check if file is valid
     head -1 "$temppath" | grep '{"message"' > /dev/null && {
-        echoerror 'File is not executed because of invalid API access.'
+        echoerror 'file is not executed because of invalid API access.'
         exit 1
     } || {
         chmod +x "$temppath"

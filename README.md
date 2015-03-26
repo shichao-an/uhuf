@@ -1,11 +1,11 @@
 uhuf
 ====
 
-uhuf is a CLI tool that get files from the connected GitLab repository using API.
+uhuf is a CLI tool that gets files from the connected GitLab repository using API.
 
 ### Configuration
 
-uhuf requires a config file at `/etc/uhuf.conf`, or `../etc/uhuf.conf` relative to binary directory that holds the `uhuf` script (e.g. `/usr/local/etc/uhuf.conf`). The config file is in INI format, and needs three variables under the `uhuf` section. For example,
+uhuf requires a config file at `/etc/uhuf.conf`, or `../etc/uhuf.conf` relative to the bin directory that holds the `uhuf` script (e.g. `/usr/local/etc/uhuf.conf`). The config file is in INI format, and needs three variables under the `uhuf` section. For example,
 
 ``` ini
 [uhuf]
@@ -16,7 +16,7 @@ private_token = _MVjujFKn87zErxzHjbVH
 
 ### Usage
 
-List contents in repository, passing an optional path:
+List contents in the repository, passing an optional path:
 
     $ uhuf -l
     $ uhuf -l docs
@@ -36,7 +36,7 @@ Execute the raw file:
 
 ### Bash Completion
 
-uhuf comes with completion script `completions/uhuf.bash`. Source this script before using the `uhuf` command. The completion script also requires config file at `/etc/uhuf.conf`, or `../etc/uhuf.conf` relative to completion directory that holds itself.
+uhuf comes with a completion script `completions/uhuf.bash`. Source this script before using the `uhuf` command. The completion script also requires the config file at `/etc/uhuf.conf`, or `../etc/uhuf.conf` relative to the completion directory that holds itself.
 
 ### License
 * uhuf: FreeBSD License
