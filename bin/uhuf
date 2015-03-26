@@ -85,7 +85,9 @@ curl_tree() {
 }
 
 curl_raw() {
-    curl -s -H "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$RAW_URL${1}"
+    # Squeeze slashes
+    local filepath=$(echo "$1" | tr -s '/')
+    curl -s -H "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$RAW_URL$filepath"
 }
 
 download_filepath() {
