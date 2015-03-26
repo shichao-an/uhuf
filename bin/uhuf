@@ -22,6 +22,12 @@ echoerror() {
     printf "$SCRIPT_NAME: %s\n" "$@" 1>&2;
 }
 
+# Check if no option or arguments are given
+[ $# -eq 0 ] && {
+    show_help
+    exit 1
+}
+
 while getopts ":dehl" opt; do
     case $opt in
     d)
@@ -45,6 +51,12 @@ while getopts ":dehl" opt; do
     esac
 done
 shift "$((OPTIND-1))"
+
+# Check if multiple positional arguments are given after getopts
+[ $# -gt 1 ] && {
+    show_help
+    exit 1
+}
 
 # Check config file
 if [ -f /etc/uhuf.conf ]; then
