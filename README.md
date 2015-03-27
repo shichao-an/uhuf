@@ -30,9 +30,10 @@ Download the raw file:
 
     $ uhuf tests/api/test_main.py
 
-Execute the raw file:
+Execute the raw file and passing command-line arguments:
 
-    $ uhuf scripts/run.sh
+    $ uhuf -e scripts/run.sh
+    command-line arguments: -a name
 
 ### Bash Completion
 
