@@ -127,7 +127,9 @@ execute_filepath() {
         exit 1
     } || {
         chmod +x "$temppath"
-        $temppath
+        local args
+        read -e -p 'command-line arguments: ' args
+        $temppath $args
         rm "$temppath"
     }  
 }
