@@ -28,7 +28,7 @@ Get raw file and print the content to stdout:
 
 Download the raw file:
 
-    $ uhuf tests/api/test_main.py
+    $ uhuf -d tests/api/test_main.py
 
 Execute the raw file and passing command-line arguments:
 
