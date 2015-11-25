@@ -3,7 +3,7 @@
 
 set -e
 
-SCRIPT_NAME="$(basename $0)"
+SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 show_help() {
@@ -92,13 +92,14 @@ curl_tree() {
     curl -s -H "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$TREE_URL${1}" | \
         JSON.sh -l | egrep '\[[0-9]+,"name"\]|\[[0-9]+,"type"\]' | \
         gawk '{ print $2 }' | tr -d '"' | xargs -L 2 | \
-        gawk -v path=$path \
+        gawk -v path="$path" \
         '$2 == "tree" { print path$1"/" } $2 == "blob" { print path$1 }'
 }
 
 curl_raw() {
     # Squeeze slashes
-    local filepath=$(echo "$1" | tr -s '/')
+    local filepath
+    filepath=$(echo "$1" | tr -s '/')
     curl -s -H "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$RAW_URL$filepath"
 }
 
@@ -108,12 +109,12 @@ download_filepath() {
     local temppath="$TMP_DIR/$filename"
     curl_raw "$filepath" > "$temppath"
     # Check if file is valid
-    head -1 "$temppath" | grep '{"message"' > /dev/null && {
+    if head -1 "$temppath" | grep '{"message"' > /dev/null; then
         echoerror 'file is not downloaded because of invalid API access.'
         exit 1
-    } || {
+    else
         mv "$temppath" "$filename"
-    }
+    fi
 }
 
 execute_filepath() {
@@ -122,16 +123,16 @@ execute_filepath() {
     local temppath="$TMP_DIR/$filename"
     curl_raw "$filepath" > "$temppath"
     # Check if file is valid
-    head -1 "$temppath" | grep '{"message"' > /dev/null && {
+    if head -1 "$temppath" | grep '{"message"' > /dev/null; then
         echoerror 'file is not executed because of invalid API access.'
         exit 1
-    } || {
+    else
         chmod +x "$temppath"
         local args
-        read -e -p 'command-line arguments: ' args
-        $temppath $args
+        read -r -e -p 'command-line arguments: ' args
+        $temppath "$args"
         rm "$temppath"
-    }  
+    fi
 }
 
 case _${ACTION} in
